@@ -1,0 +1,110 @@
+version: "3"
+
+vars:
+  DBT_PROFILES_DIR: "."
+  DBT_TARGET: dev
+
+tasks:
+  default:
+    desc: "List all available tasks"
+    cmds:
+      - task --list
+
+  setup:
+    desc: "Initial setup - install dbt dependencies"
+    cmds:
+      - mkdir -p data logs
+      - dbt deps --profiles-dir {{.DBT_PROFILES_DIR}}
+      - echo "✅ Setup complete!"
+
+  debug:
+    desc: "Debug dbt connection and configuration"
+    cmds:
+      - dbt debug --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+
+  clean:
+    desc: "Clean dbt artifacts (target/, dbt_packages/)"
+    cmds:
+      - dbt clean --profiles-dir {{.DBT_PROFILES_DIR}}
+      - rm -rf logs/*.log
+      - echo "✅ Cleaned dbt artifacts"
+
+  compile:
+    desc: "Compile dbt models without executing"
+    cmds:
+      - dbt compile --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+
+  run:
+    desc: "Run all dbt models"
+    cmds:
+      - dbt run --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+
+  run-model:
+    desc: "Run specific model(s) - use: task run-model -- --select model_name"
+    cmds:
+      - dbt run --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} {{.CLI_ARGS}}
+
+  test:
+    desc: "Run all dbt tests"
+    cmds:
+      - dbt test --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+
+  test-model:
+    desc: "Test specific model(s) - use: task test-model -- --select model_name"
+    cmds:
+      - dbt test --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} {{.CLI_ARGS}}
+
+  seed:
+    desc: "Load seed data from CSV files"
+    cmds:
+      - dbt seed --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+
+  snapshot:
+    desc: "Run snapshots"
+    cmds:
+      - dbt snapshot --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+
+  docs-generate:
+    desc: "Generate dbt documentation"
+    cmds:
+      - dbt docs generate --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+
+  docs-serve:
+    desc: "Serve dbt documentation on localhost:8080"
+    cmds:
+      - dbt docs serve --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --port 8080
+
+  build:
+    desc: "Run models, tests, snapshots, and seeds in DAG order"
+    cmds:
+      - dbt build --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+
+  build-full:
+    desc: "Full refresh build - drops and recreates all tables"
+    cmds:
+      - dbt build --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --full-refresh
+
+  freshness:
+    desc: "Check source data freshness"
+    cmds:
+      - dbt source freshness --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+
+  list-models:
+    desc: "List all models in the project"
+    cmds:
+      - dbt list --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --resource-type model
+
+  list-sources:
+    desc: "List all sources in the project"
+    cmds:
+      - dbt list --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --resource-type source
+
+  prod-run:
+    desc: "Run models in production environment"
+    cmds:
+      - dbt run --profiles-dir {{.DBT_PROFILES_DIR}} --target prod
+
+  prod-build:
+    desc: "Full build in production environment"
+    cmds:
+      - dbt build --profiles-dir {{.DBT_PROFILES_DIR}} --target prod

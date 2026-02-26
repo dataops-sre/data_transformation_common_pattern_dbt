@@ -1,0 +1,40 @@
+name: 'data_transformation_common_pattern_dbt'
+version: '1.0.0'
+config-version: 2
+
+profile: 'data_transformation_common_pattern_dbt'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  data_transformation_common_pattern_dbt:
+    +materialized: view
+    +on_schema_change: "sync_all_columns"
+    
+    staging:
+      +materialized: view
+      +tags: ["staging"]
+    
+    marts:
+      +materialized: table
+      +tags: ["marts"]
+
+seeds:
+  data_transformation_common_pattern_dbt:
+    +quote_columns: false
+
+snapshots:
+  data_transformation_common_pattern_dbt:
+    +target_schema: snapshots
+    +strategy: timestamp
+    +unique_key: id
+    +updated_at: updated_at

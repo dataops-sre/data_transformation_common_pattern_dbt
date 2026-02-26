@@ -1,0 +1,14 @@
+data_transformation_common_pattern_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: './data/dev.duckdb'
+      schema: main
+      threads: 4
+      
+    prod:
+      type: duckdb
+      path: './data/prod.duckdb'
+      schema: main
+      threads: 8
