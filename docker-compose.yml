@@ -1,0 +1,17 @@
+services:
+  dbt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dbt-duckdb-runner
+    volumes:
+      # Mount entire project (including dbt models, profiles, etc.)
+      - ./:/workspace
+    environment:
+      # Tell dbt where to find profiles.yml (adjust path as needed)
+      - DBT_PROFILES_DIR=/workspace
+      # Optional: Pass DuckDB path as environment variable
+      - DBT_DUCKDB_PATH=/workspace/data/dev.duckdb
+    working_dir: /workspace
+    stdin_open: true
+    tty: true

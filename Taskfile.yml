@@ -1,7 +1,7 @@
 version: "3"
 
 vars:
-  DBT_PROFILES_DIR: "."
+  DBT_PROFILES_DIR: "/workspace/"
   DBT_TARGET: dev
 
 tasks:
@@ -10,101 +10,72 @@ tasks:
     cmds:
       - task --list
 
-  setup:
-    desc: "Initial setup - install dbt dependencies"
-    cmds:
-      - mkdir -p data logs
-      - dbt deps --profiles-dir {{.DBT_PROFILES_DIR}}
-      - echo "✅ Setup complete!"
-
-  debug:
-    desc: "Debug dbt connection and configuration"
-    cmds:
-      - dbt debug --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
-
-  clean:
-    desc: "Clean dbt artifacts (target/, dbt_packages/)"
-    cmds:
-      - dbt clean --profiles-dir {{.DBT_PROFILES_DIR}}
-      - rm -rf logs/*.log
-      - echo "✅ Cleaned dbt artifacts"
-
-  compile:
-    desc: "Compile dbt models without executing"
-    cmds:
-      - dbt compile --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
-
+  # Core commands
   run:
-    desc: "Run all dbt models"
+    desc: "Run arbitrary command in container"
     cmds:
-      - dbt run --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+      - docker compose run --rm --build dbt sh -c "{{.CLI_ARGS}}"
 
-  run-model:
-    desc: "Run specific model(s) - use: task run-model -- --select model_name"
+  setup:
+    desc: "Initial project setup"
     cmds:
-      - dbt run --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} {{.CLI_ARGS}}
+      - docker compose build
+      - task: run -- "dbt deps --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
+
+  # dbt essentials
+  dbt-run:
+    desc: "Run dbt models"
+    cmds:
+      - task: run -- "dbt run --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
+
+  dbt-run-full:
+    desc: "Run dbt models with full refresh"
+    cmds:
+      - task: run -- "dbt run --full-refresh --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
 
   test:
-    desc: "Run all dbt tests"
+    desc: "Run dbt tests"
     cmds:
-      - dbt test --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
-
-  test-model:
-    desc: "Test specific model(s) - use: task test-model -- --select model_name"
-    cmds:
-      - dbt test --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} {{.CLI_ARGS}}
-
-  seed:
-    desc: "Load seed data from CSV files"
-    cmds:
-      - dbt seed --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
-
-  snapshot:
-    desc: "Run snapshots"
-    cmds:
-      - dbt snapshot --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
-
-  docs-generate:
-    desc: "Generate dbt documentation"
-    cmds:
-      - dbt docs generate --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
-
-  docs-serve:
-    desc: "Serve dbt documentation on localhost:8080"
-    cmds:
-      - dbt docs serve --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --port 8080
+      - task: run -- "dbt test --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
 
   build:
-    desc: "Run models, tests, snapshots, and seeds in DAG order"
+    desc: "Build models and run tests"
     cmds:
-      - dbt build --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+      - task: run -- "dbt build --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
 
-  build-full:
-    desc: "Full refresh build - drops and recreates all tables"
+  # Code quality
+  lint:
+    desc: "Lint SQL files"
     cmds:
-      - dbt build --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --full-refresh
+      - task: run -- "sqlfluff lint models/ --dialect duckdb"
 
-  freshness:
-    desc: "Check source data freshness"
+  format:
+    desc: "Format SQL files"
     cmds:
-      - dbt source freshness --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}
+      - task: run -- "sqlfluff fix models/ --dialect duckdb"
 
-  list-models:
-    desc: "List all models in the project"
+  # Development workflow
+  dev:
+    desc: "Development cycle: format → run → test"
     cmds:
-      - dbt list --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --resource-type model
+      - task: format
+      - task: dbt-run-full
+      - task: test
 
-  list-sources:
-    desc: "List all sources in the project"
+  # Utilities
+  docs:
+    desc: "Generate and serve documentation"
     cmds:
-      - dbt list --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --resource-type source
+      - task: run -- "dbt docs generate --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
+      - task: run -- "dbt docs serve --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --port 8080"
 
-  prod-run:
-    desc: "Run models in production environment"
+  query:
+    desc: "Query DuckDB - use: task query -- 'SELECT * FROM table'"
     cmds:
-      - dbt run --profiles-dir {{.DBT_PROFILES_DIR}} --target prod
+      - task: run -- "duckdb data/dev.duckdb -c \"{{.CLI_ARGS}}\""
 
-  prod-build:
-    desc: "Full build in production environment"
+  clean:
+    desc: "Clean artifacts"
     cmds:
-      - dbt build --profiles-dir {{.DBT_PROFILES_DIR}} --target prod
+      - task: run -- "dbt clean --profiles-dir {{.DBT_PROFILES_DIR}}"
+      - docker compose down -v
