@@ -1,8 +1,8 @@
-name: 'data_transformation_common_pattern_dbt'
-version: '1.0.0'
+name: "data_transformation_common_pattern_dbt"
+version: "1.0.0"
 config-version: 2
 
-profile: 'data_transformation_common_pattern_dbt'
+profile: "data_transformation_common_pattern_dbt"
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
@@ -19,14 +19,22 @@ models:
   data_transformation_common_pattern_dbt:
     +materialized: view
     +on_schema_change: "sync_all_columns"
-    
+    +required_fields: []
+
     staging:
       +materialized: view
       +tags: ["staging"]
-    
+      +required_fields: []
+
+    intermediate:
+      +materialized: view
+      +tags: ["intermediate"]
+      +required_fields: []
+
     marts:
       +materialized: table
       +tags: ["marts"]
+      +required_fields: []
 
 seeds:
   data_transformation_common_pattern_dbt:
