@@ -28,6 +28,7 @@ uv.lock
 *.swo
 *~
 .DS_Store
+.user.yml
 
 # OS
 Thumbs.db

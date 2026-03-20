@@ -1,0 +1,21 @@
+sources:
+  - name: raw
+    schema: main
+    tables:
+      - name: raw_events
+        description: "Raw event data from CSV files with hive partitioning"
+        meta:
+          external_location: "read_csv_auto('data/pattern_1_sessionization_raw_data/date=*/events.csv', hive_partitioning=true)"
+        columns:
+          - name: event_id
+            description: "Unique identifier for each event"
+          - name: user_id
+            description: "User identifier"
+          - name: event_time
+            description: "Timestamp when event occurred"
+          - name: event_type
+            description: "Type of event (page_view, click, etc.)"
+          - name: metadata
+            description: "Additional event metadata"
+          - name: date
+            description: "Date partition column"
