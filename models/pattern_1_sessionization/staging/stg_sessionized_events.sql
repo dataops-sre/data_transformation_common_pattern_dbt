@@ -18,11 +18,12 @@ WITH s AS (
                 ORDER BY source_data.event_time
             )
         ) AS d_diff,
+
         CASE
             WHEN d_diff IS NULL OR d_diff > 30 THEN 1
             ELSE 0
         END AS is_new_session
-    FROM {{ ref('int_events_incremental') }} AS source_data
+    FROM {{ ref('raw_events') }} AS source_data
 
     {% if is_incremental() %}
         WHERE source_data.event_time >= (
@@ -39,13 +40,44 @@ u AS (
         event_type,
         metadata,
         event_time,
-        MD5(
-            user_id
-            || '_'
-            || SUM(is_new_session)
-                OVER (PARTITION BY user_id ORDER BY event_time)
-        ) AS session_id
+        SUM(is_new_session) OVER (
+            PARTITION BY user_id ORDER BY event_time
+        ) AS session_group
+
     FROM s
+),
+
+t AS (
+    SELECT
+        event_id,
+        user_id,
+        event_type,
+        metadata,
+        event_time,
+        DATEDIFF(
+            'minute',
+            event_time,
+            MIN(event_time) OVER (
+                PARTITION BY user_id, session_group ORDER BY event_time
+            )
+        ) AS minutes_from_start,
+        MD5(
+            CONCAT(
+                user_id,
+                '_',
+                session_group,
+                '_',
+                FLOOR(minutes_from_start / 480)
+            )
+        ) AS session_id
+    FROM u
 )
 
-SELECT * FROM u
+SELECT
+    event_id,
+    user_id,
+    event_type,
+    metadata,
+    event_time,
+    session_id
+FROM t

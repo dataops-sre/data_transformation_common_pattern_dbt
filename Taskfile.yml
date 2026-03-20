@@ -20,39 +20,53 @@ tasks:
     desc: "Initial project setup"
     cmds:
       - docker compose build
-      - task: run -- "dbt deps --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
+      - task: run
+        vars:
+          CLI_ARGS: "dbt deps --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
 
   # dbt essentials
   dbt-run:
     desc: "Run dbt models"
     cmds:
-      - task: run -- "dbt run --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
+      - task: run
+        vars:
+          CLI_ARGS: "dbt run --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
 
   dbt-run-full:
     desc: "Run dbt models with full refresh"
     cmds:
-      - task: run -- "dbt run --full-refresh --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
+      - task: run
+        vars:
+          CLI_ARGS: "dbt run --full-refresh --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
 
   test:
     desc: "Run dbt tests"
     cmds:
-      - task: run -- "dbt test --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
+      - task: run
+        vars:
+          CLI_ARGS: "dbt test --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
 
   build:
     desc: "Build models and run tests"
     cmds:
-      - task: run -- "dbt build --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
+      - task: run
+        vars:
+          CLI_ARGS: "dbt build --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
 
   # Code quality
   lint:
     desc: "Lint SQL files"
     cmds:
-      - task: run -- "sqlfluff lint models/ --dialect duckdb"
+      - task: run
+        vars:
+          CLI_ARGS: "sqlfluff lint models/ --dialect duckdb"
 
   format:
     desc: "Format SQL files"
     cmds:
-      - task: run -- "sqlfluff fix models/ --dialect duckdb"
+      - task: run
+        vars:
+          CLI_ARGS: "sqlfluff fix models/ --dialect duckdb"
 
   # Development workflow
   dev:
@@ -66,16 +80,24 @@ tasks:
   docs:
     desc: "Generate and serve documentation"
     cmds:
-      - task: run -- "dbt docs generate --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
-      - task: run -- "dbt docs serve --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --port 8080"
+      - task: run
+        vars:
+          CLI_ARGS: "dbt docs generate --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}}"
+      - task: run
+        vars:
+          CLI_ARGS: "dbt docs serve --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --port 8080"
 
   query:
     desc: "Query DuckDB - use: task query -- 'SELECT * FROM table'"
     cmds:
-      - task: run -- "duckdb data/dev.duckdb -c \"{{.CLI_ARGS}}\""
+      - task: run
+        vars:
+          CLI_ARGS: 'duckdb data/dev.duckdb -c "{{.CLI_ARGS}}"'
 
   clean:
     desc: "Clean artifacts"
     cmds:
-      - task: run -- "dbt clean --profiles-dir {{.DBT_PROFILES_DIR}}"
+      - task: run
+        vars:
+          CLI_ARGS: "dbt clean --profiles-dir {{.DBT_PROFILES_DIR}}"
       - docker compose down -v

@@ -26,6 +26,11 @@ models:
       +tags: ["staging"]
       +required_fields: []
 
+    raw:
+      +materialized: view
+      +tags: ["raw"]
+      +required_fields: []
+
     intermediate:
       +materialized: view
       +tags: ["intermediate"]
