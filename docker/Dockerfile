@@ -12,6 +12,12 @@ COPY pyproject.toml /workspace/
 # Install dependencies into system environment
 RUN uv sync
 
+# Copy application files
+COPY docker/ducklake_ui_server.py /workspace/
+
+# Install DuckDB extensions during build
+RUN python ducklake_ui_server.py install
+
 # Verify installation
 RUN python --version && dbt --version
 

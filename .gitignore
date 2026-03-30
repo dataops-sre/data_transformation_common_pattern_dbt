@@ -10,6 +10,9 @@ logs/
 data/*.duckdb
 data/*.duckdb.wal
 
+# docker data
+minio-data
+
 # Python
 __pycache__/
 *.py[cod]
@@ -20,6 +23,7 @@ venv/
 env/
 ENV/
 uv.lock
+.env
 
 # IDEs
 .vscode/
