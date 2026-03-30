@@ -1,4 +1,4 @@
-{{ config(materialize='incremental', unique_key='session_id') }}
+{{ config(materialized='incremental', unique_key='session_id') }}
 
 WITH s_e AS (
     SELECT

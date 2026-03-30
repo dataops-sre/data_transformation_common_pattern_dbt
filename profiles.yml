@@ -1,14 +1,41 @@
 data_transformation_common_pattern_dbt:
   target: dev
+  _common: &common
+    type: duckdb
+    threads: 4
+    extensions:
+      - ducklake
+    secrets:
+      - type: postgres
+        name: catalog_credentials
+        host: "{{ env_var('PGHOST') }}"
+        port: "{{ env_var('PGPORT') }}"
+        user: "{{ env_var('PGUSER') }}"
+        password: "{{ env_var('PGPASSWORD') }}"
+        database: "{{ env_var('PGDATABASE') }}"
+      - type: s3
+        endpoint: "{{ env_var('DUCKDB_S3_ENDPOINT') }}"
+        use_ssl: "{{ env_var('DUCKDB_S3_USE_SSL') }}"
+        url_style: "{{ env_var('URL_STYLE') }}"
+        region: "{{ env_var('AWS_REGION') }}"
+        key_id: "{{ env_var('AWS_ACCESS_KEY_ID') }}"
+        secret: "{{ env_var('AWS_SECRET_ACCESS_KEY') }}"
+    attach:
+      - path: "ducklake:postgres:"
+        alias: datalake
+        options:
+          meta_secret: catalog_credentials
+          data_path: "s3://{{ env_var('BUCKET_NAME') }}"
+          encrypted: true
+    database: datalake
+
   outputs:
     dev:
-      type: duckdb
-      path: './data/dev.duckdb'
-      schema: main
-      threads: 4
-      
+      <<: *common
+      # every developer gets their own schema (e.g. "dev_jack")
+      schema: "dev_{{ env_var('USER', 'common') | lower }}"
+
     prod:
-      type: duckdb
-      path: './data/prod.duckdb'
-      schema: main
-      threads: 8
+      <<: *common
+      # fallback schema for production models
+      schema: "main"

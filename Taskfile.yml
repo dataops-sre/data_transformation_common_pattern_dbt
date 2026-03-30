@@ -87,13 +87,6 @@ tasks:
         vars:
           CLI_ARGS: "dbt docs serve --profiles-dir {{.DBT_PROFILES_DIR}} --target {{.DBT_TARGET}} --port 8080"
 
-  query:
-    desc: "Query DuckDB - use: task query -- 'SELECT * FROM table'"
-    cmds:
-      - task: run
-        vars:
-          CLI_ARGS: 'duckdb data/dev.duckdb -c "{{.CLI_ARGS}}"'
-
   clean:
     desc: "Clean artifacts"
     cmds:
@@ -101,3 +94,18 @@ tasks:
         vars:
           CLI_ARGS: "dbt clean --profiles-dir {{.DBT_PROFILES_DIR}}"
       - docker compose down -v
+
+  # DuckDB UI with DuckLake
+  datalake-start:
+    desc: "Start DuckDB UI with DuckLake (http://localhost:8080)"
+    cmds:
+      - docker compose up -d ducklake-ui nginx-proxy
+      - echo "🚀 Ducklake starting..."
+
+  datalake-stop:
+    desc: "Stop Ducklake"
+    cmds:
+      - docker compose stop ducklake-ui nginx-proxy
+      # clean storage too
+      - docker compose down -v
+      - echo "✅ Ducklake stopped"
